@@ -92,36 +92,42 @@ function perform_backup {
 	else
 		log "tar error: $?"
 		log "exiting..."
-		clean_up
+		clean_up 11
 		exit 1
 	fi
 	
 	log "number of files backed up: `/usr/bin/less $lists/$date | /usr/bin/wc -l`"
 
 	/usr/bin/gpg --symmetric --batch --passphrase-file $backup_dir/.info --output /tmp/$gpgfile /tmp/$tarfile
-	if [ $? -eq 0 ]; then
+	if [ "${?:-0}" -eq 0 ]; then
 		log "tar successfully encrypted with gpg"
 		log "size of encrypted archive: `/usr/bin/du -h /tmp/$gpgfile | /usr/bin/awk -F ' ' '{ print $1 }'`"
 	else
 		log "gpg error: $?"
 		log "exiting..."
-		clean_up
+		clean_up 12
 		exit 1
 	fi
 }
 
 function clean_up {
-
-	if [ -f $backup_dir/etc.tar.gz ]; then
-		/usr/bin/rm $backup_dir/etc.tar.gz
-	fi
+	for file in $backup_dir/etc.tar.gz /tmp/$tarfile /tmp/$gpgfile; do
+		if [ -f $file ]; then
+			if [ "${1:-0}" -eq 23 ] || [ "${1:-0}" -eq 24 ]; then
+				if [ "$file" = "/tmp/$gpgfile" ]; then
+					continue
+				fi
+			fi
+			/usr/bin/rm $file
+		fi
+	done
 	
-	if [ -f /tmp/$tarfile ]; then
-		/usr/bin/rm /tmp/$tarfile
-	fi
-	
-	if [ -f /tmp/$gpgfile ]; then
-		/usr/bin/rm /tmp/$gpgfile
+	if [ $1 ]; then
+		for dir in lists logs programs environment; do
+			if [ -f $dir/$date ]; then
+				/usr/bin/rm $dir/$date
+			fi
+		done
 	fi
 }
 
