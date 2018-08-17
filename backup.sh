@@ -1,24 +1,18 @@
-# /bin/sh
+# /bin/bash
 # Thank you, Paul Whipp (paulwhippconsulting.com/)
 # decrypt with:
 	# gpg --output <tarfile> <gpgfile>>
-	
-count=0
-ping -w 10 -c 1 drive.google.com > /dev/null
-while [ $? -ne 0 ]; do
-	count=$(( $count + 1 ))
-	if [ $count -ge 60 ]; then
-		echo "No internet for backup"
-		exit 1
-	fi
-	sleep 60
-	ping -w 10 -c 1 drive.google.com > /dev/null
-done
 	
 start_time=`/usr/bin/date +%s`
 backup_dir=~/.backup
 logfile=~/.logs/backup
 
+ping -w 10 -c 1 drive.google.com > /dev/null
+if [ $? -ne 0 ]; then
+	echo "No internet for backup"
+	exit 1
+fi
+	
 function log {
 	/usr/bin/echo -e "\t$1" >> $logfile
 }
