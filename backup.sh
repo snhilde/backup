@@ -18,24 +18,24 @@ function log {
 }
 
 function get_date {
-	if [ ! -e $lists/$month ]; then
+	if [ ! -e $logs/$month ]; then
 		#prepare base backup
 		date=$month
 		/usr/bin/tar czpf $backup_dir/etc.tar.gz /etc 2> /dev/null
 		level=0
 		type="monthly"
 		
-	elif [ ! -e $lists/$week ]; then
+	elif [ ! -e $logs/$week ]; then
 		#prepare level 1 backup
 		date=$week
-		time="-newer $lists/$month"
+		time="-newer $logs/$month"
 		level=1
 		type="weekly"
 		
-	elif [ ! -e $lists/$day ]; then
+	elif [ ! -e $logs/$day ]; then
 		#prepare level 2 backup
 		date=$day
-		time="-newer $lists/$week"
+		time="-newer $logs/$week"
 		level=2
 		type="daily"
 		
