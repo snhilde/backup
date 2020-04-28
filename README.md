@@ -1,17 +1,24 @@
 # backup
-Simple script for daily automated backups
+Simple script for incremental backups
 
 ## Introduction
-This script will perform incremental backups daily and upload the encrypted file to Google Drive. A base (level 0) backup occurs once a month, level 2 is weekly, and level 3 daily.
+This script will perform an incremental backup depending on when the last
+backup was performed. If there has been no backup this month, it will back up
+everything. Otherwise, it will check when the last backup happened and only
+save # the files that have changed since then. It will back up everything in
+the user's home directory (excluding the # directories listed in IGNORE_DIRS
+below) and will also back up /etc every month. # The only argument to the
+script is the directory of where the archive should be stored. # To recreate a
+backup's snapshot at a specific time, incrementally extract each archive from
+the largest time (monthly # level) down to the desired level.
 
-## Requirements
-* [gupload](https://github.com/snhilde/gupload)
+## Caveat
+Please note that this is not meant to be a universal backup script. It's a
+working product, not a full-featured system. Some work will need to be taken to
+localize this to your particular system.
 
-## Configuration
-Some things to localize the script to your system:
-1. If you are not using Arch Linux, you will need to change the two calls to pacman.
-2. The script uses ~/.backup as the main repository for the lists and logs it creates. If you don't want to use that directory or don't like the tree structure within it, then you know how to change it.
-3. Archives are encrypted with `gpg` before being uploaded. The script assumes your plain-text password is kept in ~/.backup/.info. You might want to configure this.
-
-### Author
-Hilde N.
+## Settings
+You will want to change these settings for your system:
+* `LOG_FILE` - file to log backup process
+* `INFO_DIR` - directory where small, informational files will be stored
+* `IGNORE_DIRS` - directories to **not** include in backup.
