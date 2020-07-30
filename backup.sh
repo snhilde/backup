@@ -33,7 +33,7 @@ function die {
 }
 
 function init {
-	# Make sure we were passed the correct arguments.
+	# Make sure we were passed a base directory.
 	if [ -z "${SYNCTO}" ] || [ ! -d "${SYNCTO}" ]; then
 		echo "Missing base directory ('-d')"
 		echo ""
@@ -50,11 +50,12 @@ function init {
 }
 
 function mirror_backup {
-	# If we have a previous backup, then we'll make an identical mirror of it and sync it with the
-	# current system.
+	# If we have a previous backup, then we'll make an identical mirror of it for later syncing.
 	if [ -d latest ]; then
 		echo "Mirroring latest backup..."
 
+		# Because we are preserving links with the -a switch, we have to follow the latest link
+		# first before creating the mirror.
 		cp -al ${VERBOSE} $(readlink latest) ${DIRNAME} || die
 		sync
 
@@ -65,10 +66,9 @@ function mirror_backup {
 function perform_backup {
 	echo "Performing backup on these directories: ${SYNCFROM}"
 
-	rsync -ah --delete ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
+	rsync --archive --hard-links --delete --progress ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
 	sync
-	rm latest
-	ln -s ${DIRNAME} latest
+	ln -sf ${DIRNAME} latest
 
 	echo "Backup complete"
 }
@@ -78,6 +78,7 @@ while getopts "c:d:hv" opt; do
 	case ${opt} in
 		c)
 			echo "todo"
+			exit 2
 			;;
 		d)
 			SYNCTO=${OPTARG}
@@ -87,7 +88,7 @@ while getopts "c:d:hv" opt; do
 			exit
 			;;
 		v)
-			VERBOSE="-v"
+			VERBOSE="--verbose"
 			;;
 		*)
 			echo "Invalid argument: ${opt}"
