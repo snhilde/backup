@@ -13,6 +13,7 @@ function usage {
 	echo -e "\t-c: Encrypted drive to open and use (Required if '-d' is not specified)"
 	echo -e "\t-d: Base directory where all backups are stored (Required if '-c' is not specified)"
 	echo -e "\t-h: This help screen"
+	echo -e "\t-v: Verbose mode"
 	echo ""
 	echo "Return values:"
 	echo -e "\t0: Backup completed successfully"
@@ -21,8 +22,12 @@ function usage {
 }
 
 function die {
-	echo "Error encountered, reversing progress"
-	rm -rf ${SYNCDIR}/${DIRNAME}
+	echo "Error encountered, rolling back progress..."
+
+	if [ -d ${SYNCDIR}/${DIRNAME} ]; then
+		rm -rf ${SYNCDIR}/${DIRNAME}
+	fi
+
 	echo "Exiting"
 	exit 1
 }
@@ -31,27 +36,26 @@ function init {
 	# Make sure we were passed the correct arguments.
 	if [ -z "${SYNCTO}" ] || [ ! -d "${SYNCTO}" ]; then
 		echo "Missing base directory ('-d')"
+		echo ""
 		usage
 		exit 2
 	fi
 
-	# This is the main directory for all the backups.
+	# Go to the main directory where all the backups are stored.
 	SYNCDIR="${SYNCTO}/backups"
-
-	# Set up our directories.
 	if [ ! -d ${SYNCDIR} ]; then
-		mkdir ${SYNCDIR}
+		mkdir ${SYNCDIR} || die
 	fi
-	mkdir ${SYNCDIR}/${DIRNAME}
+	cd ${SYNCDIR} || die
 }
 
 function mirror_backup {
 	# If we have a previous backup, then we'll make an identical mirror of it and sync it with the
 	# current system.
-	if [ -d ${SYNCDIR}/latest ]; then
+	if [ -d latest ]; then
 		echo "Mirroring latest backup..."
 
-		cp -adl ${SYNCDIR}/latest ${SYNCDIR}/${DIRNAME} || die
+		cp -al ${VERBOSE} $(readlink latest) ${DIRNAME} || die
 		sync
 
 		echo "Mirror complete"
@@ -61,19 +65,19 @@ function mirror_backup {
 function perform_backup {
 	echo "Performing backup on these directories: ${SYNCFROM}"
 
-	rsync -ahPv --delete ${SYNCFROM} ${SYNCDIR}/${DIRNAME} || die
+	rsync -ah --delete ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
 	sync
-	rm ${SYNCDIR}/latest
-	ln -s ${SYNCDIR}/${DIRNAME} ${SYNCDIR}/latest
+	rm latest
+	ln -s ${DIRNAME} latest
 
 	echo "Backup complete"
 }
 
 
-while getopts "c:d:h" opt; do
+while getopts "c:d:hv" opt; do
 	case ${opt} in
 		c)
-			echo "in progress"
+			echo "todo"
 			;;
 		d)
 			SYNCTO=${OPTARG}
@@ -81,6 +85,9 @@ while getopts "c:d:h" opt; do
 		h)
 			usage
 			exit
+			;;
+		v)
+			VERBOSE="-v"
 			;;
 		*)
 			echo "Invalid argument: ${opt}"
