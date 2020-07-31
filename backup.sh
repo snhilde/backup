@@ -22,10 +22,11 @@ function usage {
 }
 
 function die {
-	echo "Error encountered, rolling back progress..."
-
 	if [ -d ${SYNCDIR}/${DIRNAME} ]; then
+		echo "Error encountered, rolling back progress..."
 		rm -rf ${SYNCDIR}/${DIRNAME}
+	else
+		echo "Error encountered"
 	fi
 
 	echo "Exiting"
@@ -42,10 +43,15 @@ function init {
 	fi
 
 	# Go to the main directory where all the backups are stored.
-	SYNCDIR="${SYNCTO}/backups"
-	if [ ! -d ${SYNCDIR} ]; then
-		mkdir ${SYNCDIR} || die
+	if [ "$(basename ${SYNCTO})" == "backups" ]; then
+		SYNCDIR="${SYNCTO}"
+	else
+		SYNCDIR="${SYNCTO}/backups"
+		if [ ! -d ${SYNCDIR} ]; then
+			mkdir ${SYNCDIR} || die
+		fi
 	fi
+
 	cd ${SYNCDIR} || die
 }
 
@@ -66,7 +72,7 @@ function mirror_backup {
 function perform_backup {
 	echo "Performing backup on these directories: ${SYNCFROM}"
 
-	rsync --archive --hard-links --delete --progress ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
+	rsync --archive --hard-links --delete ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
 	sync
 	ln -sf ${DIRNAME} latest
 
@@ -77,6 +83,7 @@ function perform_backup {
 while getopts "c:d:hv" opt; do
 	case ${opt} in
 		c)
+			CRYPT
 			echo "todo"
 			exit 2
 			;;
