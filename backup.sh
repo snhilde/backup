@@ -34,12 +34,19 @@ function die {
 }
 
 function init {
-	# Make sure we were passed a base directory.
-	if [ -z "${SYNCTO}" ] || [ ! -d "${SYNCTO}" ]; then
-		echo "Missing base directory ('-d')"
-		echo ""
-		usage
-		exit 2
+	if [ -n "${CRYPT}" ]; then
+		CRYPTNAME="backup-${RANDOM}"
+		cryptsetup open ${CRYPT} ${CRYPTNAME} || die
+		mount /dev/mapper/${CRYPTNAME} /mnt || die
+		SYNCTO="/mnt"
+	else
+		# Make sure we were passed a base directory.
+		if [ -z "${SYNCTO}" ] || [ ! -d "${SYNCTO}" ]; then
+			echo "Missing base directory ('-d')"
+			echo ""
+			usage
+			exit 2
+		fi
 	fi
 
 	# Go to the main directory where all the backups are stored.
@@ -74,20 +81,46 @@ function perform_backup {
 
 	rsync --archive --hard-links --delete ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
 	sync
-	ln -sf ${DIRNAME} latest
+
+	if [ -f latest ]; then
+		rm latest
+	fi
+	ln -s ${DIRNAME} latest
 
 	echo "Backup complete"
+}
+
+function deinit {
+	if [ -n "${CRYPTNAME}" ]; then
+		umount /mnt && cryptsetup close ${CRYPTNAME}
+
+		if [ "${?}" == "0" ]; then
+			echo "Crypt drive closed successfully"
+		else
+			echo "Error closing crypt drive"
+		fi
+	fi
 }
 
 
 while getopts "c:d:hv" opt; do
 	case ${opt} in
 		c)
-			CRYPT
-			echo "todo"
-			exit 2
+			if [ -n "${SYNCTO}" ]; then
+				echo "Cannot specify both '-c' and '-d' arguments"
+				usage
+				exit 2
+			fi
+
+			CRYPT=${OPTARG}
 			;;
 		d)
+			if [ -n "${CRYPT}" ]; then
+				echo "Cannot specify both '-c' and '-d' arguments"
+				usage
+				exit 2
+			fi
+
 			SYNCTO=${OPTARG}
 			;;
 		h)
@@ -109,3 +142,4 @@ done
 init
 mirror_backup
 perform_backup
+deinit
