@@ -2,7 +2,7 @@
 
 
 # These are the directories that will be backed up:
-SYNCFROM="/boot /etc /home /opt /root /usr"
+SYNCTHESE="/boot /etc /home /opt /root /usr"
 
 # This will be the name of the backup:
 DIRNAME="$(date +%s)"
@@ -21,6 +21,7 @@ function usage {
 	echo -e "\t2: Invalid arguments"
 }
 
+# This puts the backups into a working state if any error is encountered.
 function die {
 	if [ -d ${SYNCDIR}/${DIRNAME} ]; then
 		echo "Error encountered, rolling back progress..."
@@ -33,8 +34,11 @@ function die {
 	exit 1
 }
 
+# This sets up the backup structure.
 function init {
+	# Figure out where we're going to back up to.
 	if [ -n "${CRYPT}" ]; then
+		# We need to backup to an encrypted drive.
 		CRYPTNAME="backup-${RANDOM}"
 		cryptsetup open ${CRYPT} ${CRYPTNAME} || die
 		mount /dev/mapper/${CRYPTNAME} /mnt || die
@@ -62,9 +66,11 @@ function init {
 	cd ${SYNCDIR} || die
 }
 
+# This creates a duplicate of the latest backup by mirroring the directory structure and hard
+# linking all files.
 function mirror_backup {
 	# If we have a previous backup, then we'll make an identical mirror of it for later syncing.
-	if [ -d latest ]; then
+	if [ -L latest ]; then
 		echo "Mirroring latest backup..."
 
 		# Because we are preserving links with the -a switch, we have to follow the latest link
@@ -76,10 +82,12 @@ function mirror_backup {
 	fi
 }
 
+# This syncs the chosen directories with the latest backup, creating a snapshot of the current
+# system.
 function perform_backup {
-	echo "Performing backup on these directories: ${SYNCFROM}"
+	echo "Performing backup on these directories: ${SYNCTHESE}"
 
-	rsync --archive --hard-links --delete ${VERBOSE} ${SYNCFROM} ${DIRNAME} || die
+	rsync --archive --hard-links --delete ${VERBOSE} ${SYNCTHESE} ${DIRNAME} || die
 	sync
 
 	if [ -f latest ]; then
@@ -90,6 +98,7 @@ function perform_backup {
 	echo "Backup complete"
 }
 
+# Currently, this only closes out the encrypted drive, if one was used.
 function deinit {
 	if [ -n "${CRYPTNAME}" ]; then
 		umount /mnt && cryptsetup close ${CRYPTNAME}
