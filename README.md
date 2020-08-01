@@ -3,7 +3,7 @@ Script for creating filesystem snapshots.
 
 
 ## Introduction
-This script creates snapshots of the desired directories. When it is run, it mirrors the most recent backup and syncs any changes made since then. This allows you to see the system as it was in that moment of time.
+This script creates snapshots of the desired directories. When it is run, it mirrors the most recent backup and syncs any changes made since then. This allows you to see the system as it was in that moment of time. To minimize space used, the script mirrors with hard links.
 
 By default, the script backs up these root directories: `/boot` `/etc` `/home` `/opt` `/root` `/usr`
 
@@ -21,3 +21,11 @@ By default, the script backs up these root directories: `/boot` `/etc` `/home` `
 * `0` Backup completed successfully
 * `1` Backup failed
 * `2` Invalid argument passed
+
+
+## Requisites
+For general usage:
+* `rsync`
+
+If using an encrypted drive:
+* `crypt`
