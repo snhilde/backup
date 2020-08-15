@@ -1,3 +1,7 @@
+![Maintenance Badge](https://img.shields.io/badge/Maintained-yes-success)
+![Version Badge](https://img.shields.io/badge/Version-2.0-informational)
+![Bash Badge](https://img.shields.io/badge/Made_with-Bash-darkblue)
+
 # backup
 Script for creating filesystem snapshots.
 
