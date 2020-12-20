@@ -87,10 +87,16 @@ function mirror_backup {
 function perform_backup {
 	echo "Performing backup on these directories: ${SYNCTHESE}"
 
-	rsync --archive --hard-links --delete ${VERBOSE} ${SYNCTHESE} ${DIRNAME} || die
+	# If Verbose mode is enabled, then we'll show all of rsync's output. Otherwise, we'll only show
+	# the last 2 lines, which detail the size of the archive and how much was actually backed up.
+	if [ -n ${VERBOSE} ]; then
+		rsync --archive --hard-links --delete --verbose ${SYNCTHESE} ${DIRNAME} || die
+	else
+		rsync --archive --hard-links --delete --verbose ${SYNCTHESE} ${DIRNAME} | tail -n 2 || die
+	fi
 	sync
 
-	if [ -f latest ]; then
+	if [ -L latest ]; then
 		rm latest
 	fi
 	ln -s ${DIRNAME} latest
