@@ -9,16 +9,17 @@ DIRNAME="$(date +%s)"
 
 
 function usage {
-	echo "Arguments:"
-	echo -e "\t-c: Encrypted drive to open and use (Required if '-d' is not specified)"
-	echo -e "\t-d: Base directory where all backups are stored (Required if '-c' is not specified)"
-	echo -e "\t-h: This help screen"
-	echo -e "\t-v: Verbose mode"
-	echo ""
-	echo "Return values:"
-	echo -e "\t0: Backup completed successfully"
-	echo -e "\t1: Error encountered during backup"
-	echo -e "\t2: Invalid arguments"
+	echo -e "\
+Arguments:
+	-c: Encrypted drive to open and use (Required if '-d' is not specified)
+	-d: Base directory where all backups are stored (Required if '-c' is not specified)
+	-h: This help screen
+	-v: Verbose mode
+
+Return values:
+	0: Backup completed successfully
+	1: Error encountered during backup
+	2: Invalid arguments"
 }
 
 # This puts the backups into a working state if any error is encountered.
