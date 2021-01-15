@@ -9,7 +9,7 @@ DIRNAME="$(date +%s)"
 
 
 function usage {
-	echo -e "\
+	echo <<\EOF
 Arguments:
 	-c: Encrypted drive to open and use (Required if '-d' is not specified)
 	-d: Base directory where all backups are stored (Required if '-c' is not specified)
@@ -19,7 +19,8 @@ Arguments:
 Return values:
 	0: Backup completed successfully
 	1: Error encountered during backup
-	2: Invalid arguments"
+	2: Invalid arguments
+EOF
 }
 
 # This puts the backups into a working state if any error is encountered.
