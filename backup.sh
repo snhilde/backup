@@ -9,7 +9,7 @@ DIRNAME="$(date +%s)"
 
 
 function usage {
-	echo <<\EOF
+	cat <<\EOF
 Arguments:
 	-c: Encrypted drive to open and use (Required if '-d' is not specified)
 	-d: Base directory where all backups are stored (Required if '-c' is not specified)
